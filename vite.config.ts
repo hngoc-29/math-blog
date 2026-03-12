@@ -2,7 +2,6 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
 export default defineConfig({
-  base: '/math-blog/',
   plugins: [react()],
   optimizeDeps: {
     include: ['lz-string', 'katex', 'highlight.js']
