@@ -5,6 +5,7 @@ import react from '@vitejs/plugin-react';
 var __filename = fileURLToPath(import.meta.url);
 var __dirname = path.dirname(__filename);
 export default defineConfig({
+    base: '/math-blog/',
     plugins: [react()],
     resolve: {
         alias: {
