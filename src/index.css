@@ -1,0 +1,27 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, sans-serif;
+}
+
+body {
+  @apply bg-slate-50 text-slate-900;
+}
+
+.mdxeditor {
+  @apply min-h-[340px] rounded-md border border-input bg-white;
+}
+
+.markdown-content {
+  @apply prose prose-slate prose-pre:bg-slate-900 prose-pre:text-slate-100 max-w-none break-words;
+}
+
+.markdown-content img {
+  @apply h-auto max-w-full rounded-lg;
+}
+
+.markdown-content table {
+  @apply block w-full overflow-x-auto;
+}
