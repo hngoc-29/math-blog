@@ -29,7 +29,7 @@ function toEmbedUrl(url: string): string | null {
 }
 
 function isMathTextCandidate(text: string): boolean {
-  return text.includes('$')
+  return text.includes('$') || text.includes('\\(') || text.includes('\\[')
 }
 
 function normalizeLatexExpr(expr: string): string {
@@ -50,9 +50,42 @@ function renderMath(expr: string, displayMode: boolean): string {
       trust: false,
     })
   } catch {
-    return displayMode ? `<span class="math-error">$$${normalized}$$</span>` : `<span class="math-error">$${normalized}$</span>`
+    const open = displayMode ? '$$' : '$'
+    return `<span class="math-error">${open}${normalized}${open}</span>`
   }
 }
+
+function normalizeHtmlMathBody(body: string): string {
+  return body
+    .replace(/<br\s*\/?>(\s*)/gi, '\n')
+    .replace(/<\/p>\s*<p[^>]*>/gi, '\n')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+}
+
+function replaceBlockMathInHtml(html: string): string {
+  let out = html
+
+  out = out.replace(/\$\$([\s\S]*?)\$\$/g, (_match, inner: string) => {
+    const expr = normalizeHtmlMathBody(inner).trim()
+    if (!expr) return _match
+    return `<span class="math-display">${renderMath(expr, true)}</span>`
+  })
+
+  out = out.replace(/\\\[([\s\S]*?)\\\]/g, (_match, inner: string) => {
+    const expr = normalizeHtmlMathBody(inner).trim()
+    if (!expr) return _match
+    return `<span class="math-display">${renderMath(expr, true)}</span>`
+  })
+
+  return out
+}
+
 
 function splitMathSegments(text: string): Array<{ type: 'text'; value: string } | { type: 'math'; value: string; displayMode: boolean }> {
   const segments: Array<{ type: 'text'; value: string } | { type: 'math'; value: string; displayMode: boolean }> = []
@@ -60,58 +93,79 @@ function splitMathSegments(text: string): Array<{ type: 'text'; value: string } 
     return [{ type: 'text', value: text }]
   }
 
+  const findNextDelimiter = (input: string, fromIndex: number) => {
+    const candidates = [
+      { token: '$$', type: 'display' as const, index: input.indexOf('$$', fromIndex), priority: 0 },
+      { token: '\[', type: 'display' as const, index: input.indexOf('\[', fromIndex), priority: 1 },
+      { token: '\(', type: 'inline' as const, index: input.indexOf('\(', fromIndex), priority: 2 },
+      { token: '$', type: 'inline' as const, index: input.indexOf('$', fromIndex), priority: 3 },
+    ].filter(item => item.index !== -1)
+
+    candidates.sort((a, b) => (a.index - b.index) || (a.priority - b.priority))
+    return candidates[0] ?? null
+  }
+
   let i = 0
   while (i < text.length) {
-    const nextDisplay = text.indexOf('$$', i)
-    const nextInline = text.indexOf('$', i)
+    const next = findNextDelimiter(text, i)
 
-    let start = -1
-    let displayMode = false
-
-    if (nextDisplay !== -1 && (nextInline === -1 || nextDisplay <= nextInline)) {
-      start = nextDisplay
-      displayMode = true
-    } else if (nextInline !== -1) {
-      start = nextInline
-    }
-
-    if (start === -1) {
+    if (!next) {
       segments.push({ type: 'text', value: text.slice(i) })
       break
     }
+
+    const start = next.index
+    const displayMode = next.type === 'display'
 
     if (start > i) {
       segments.push({ type: 'text', value: text.slice(i, start) })
     }
 
-    if (displayMode) {
+    if (next.token === '$$') {
       const end = text.indexOf('$$', start + 2)
       if (end === -1) {
         segments.push({ type: 'text', value: text.slice(start) })
         break
       }
       const expr = text.slice(start + 2, end).trim()
-      if (!expr) {
-        segments.push({ type: 'text', value: '$$' })
-      } else {
-        segments.push({ type: 'math', value: expr, displayMode: true })
-      }
+      segments.push(expr ? { type: 'math', value: expr, displayMode: true } : { type: 'text', value: '$$' })
       i = end + 2
       continue
     }
 
-    const end = text.indexOf('$', start + 1)
+    if (next.token === '\\[') {
+      const end = text.indexOf('\\]', start + 2)
+      if (end === -1) {
+        segments.push({ type: 'text', value: text.slice(start) })
+        break
+      }
+      const expr = text.slice(start + 2, end).trim()
+      segments.push(expr ? { type: 'math', value: expr, displayMode: true } : { type: 'text', value: '\\[\\]' })
+      i = end + 2
+      continue
+    }
+
+    if (next.token === '$') {
+      const end = text.indexOf('$', start + 1)
+      if (end === -1) {
+        segments.push({ type: 'text', value: text.slice(start) })
+        break
+      }
+      const expr = text.slice(start + 1, end).trim()
+      segments.push(expr ? { type: 'math', value: expr, displayMode: false } : { type: 'text', value: '$' })
+      i = end + 1
+      continue
+    }
+
+    // \(
+    const end = text.indexOf('\\)', start + 2)
     if (end === -1) {
       segments.push({ type: 'text', value: text.slice(start) })
       break
     }
-    const expr = text.slice(start + 1, end).trim()
-    if (!expr) {
-      segments.push({ type: 'text', value: '$' })
-    } else {
-      segments.push({ type: 'math', value: expr, displayMode: false })
-    }
-    i = end + 1
+    const expr = text.slice(start + 2, end).trim()
+    segments.push(expr ? { type: 'math', value: expr, displayMode: false } : { type: 'text', value: '\\(\\)' })
+    i = end + 2
   }
 
   return segments.length > 0 ? segments : [{ type: 'text', value: text }]
@@ -130,10 +184,11 @@ function isExcludedAncestor(node: Node | null): boolean {
 }
 
 function renderMathInHtml(html: string): string {
-  if (!isMathTextCandidate(html)) return html
+  const preprocessed = replaceBlockMathInHtml(html)
+  if (!isMathTextCandidate(preprocessed)) return preprocessed
 
   const parser = new DOMParser()
-  const doc = parser.parseFromString(html, 'text/html')
+  const doc = parser.parseFromString(preprocessed, 'text/html')
   const walker = doc.createTreeWalker(doc.body, NodeFilter.SHOW_TEXT)
 
   const textNodes: Text[] = []
@@ -355,7 +410,7 @@ export function MarkdownRenderer({ content, isHtml = false }: MarkdownRendererPr
     <div className="markdown-body">
       <ReactMarkdown
         remarkPlugins={[remarkGfm, remarkMath]}
-        rehypePlugins={[rehypeKatex, rehypeHighlight, rehypeRaw]}
+        rehypePlugins={[rehypeRaw, rehypeKatex, rehypeHighlight]}
       >
         {content}
       </ReactMarkdown>
