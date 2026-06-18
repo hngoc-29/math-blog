@@ -256,12 +256,26 @@ function HelpModal({ onClose }: { onClose: () => void }) {
 
           <section className="rounded-2xl border p-4" style={{ background: 'var(--t-surface)', borderColor: 'var(--t-border)' }}>
             <h3 className="font-ui font-semibold text-sm mb-2" style={{ color: 'var(--t-text)' }}>2) LaTeX / math</h3>
-            <div className="space-y-2 font-ui text-sm leading-6" style={{ color: 'var(--t-text-muted)' }}>
-              <p>Inline math: <code className="px-1.5 py-0.5 rounded text-xs" style={{ background: 'var(--t-toolbar-bg)', color: 'var(--t-text)' }}>{'$E=mc^2$'}</code></p>
-              <p>Block math: <code className="px-1.5 py-0.5 rounded text-xs" style={{ background: 'var(--t-toolbar-bg)', color: 'var(--t-text)' }}>{'$$\\frac{1}{2}$$'}</code></p>
-              <p>Common symbols: <code className="px-1.5 py-0.5 rounded text-xs" style={{ background: 'var(--t-toolbar-bg)', color: 'var(--t-text)' }}>{'\\alpha \\beta \\gamma \\omega \\pi'}</code></p>
-              <p>Examples: <code className="px-1.5 py-0.5 rounded text-xs" style={{ background: 'var(--t-toolbar-bg)', color: 'var(--t-text)' }}>{'\\sqrt{x}'}</code>, <code className="px-1.5 py-0.5 rounded text-xs" style={{ background: 'var(--t-toolbar-bg)', color: 'var(--t-text)' }}>{'\\sum_{i=1}^{n} i'}</code></p>
-              <p>Special characters in math often need a backslash: <code className="px-1.5 py-0.5 rounded text-xs" style={{ background: 'var(--t-toolbar-bg)', color: 'var(--t-text)' }}>{'\\_ \\{ \\} \\% \\&'}</code></p>
+            <div className="space-y-3 font-ui text-sm leading-6" style={{ color: 'var(--t-text-muted)' }}>
+              <div>
+                <p className="font-medium" style={{ color: 'var(--t-text)' }}>Nên dùng</p>
+                <div className="mt-1 space-y-1">
+                  <p>Inline math: <code className="px-1.5 py-0.5 rounded text-xs" style={{ background: 'var(--t-toolbar-bg)', color: 'var(--t-text)' }}>{'$E=mc^2$'}</code></p>
+                  <p>Display math: <code className="px-1.5 py-0.5 rounded text-xs" style={{ background: 'var(--t-toolbar-bg)', color: 'var(--t-text)' }}>{'$$\\frac{1}{2}$$'}</code></p>
+                  <p>Simple symbols: <code className="px-1.5 py-0.5 rounded text-xs" style={{ background: 'var(--t-toolbar-bg)', color: 'var(--t-text)' }}>{'\\alpha \\beta \\gamma \\omega \\pi'}</code></p>
+                  <p>Common forms: <code className="px-1.5 py-0.5 rounded text-xs" style={{ background: 'var(--t-toolbar-bg)', color: 'var(--t-text)' }}>{'\\sqrt{x}'}</code>, <code className="px-1.5 py-0.5 rounded text-xs" style={{ background: 'var(--t-toolbar-bg)', color: 'var(--t-text)' }}>{'\\frac{a}{b}'}</code>, <code className="px-1.5 py-0.5 rounded text-xs" style={{ background: 'var(--t-toolbar-bg)', color: 'var(--t-text)' }}>{'\\sum_{i=1}^{n} i'}</code></p>
+                  <p>Special characters in math: <code className="px-1.5 py-0.5 rounded text-xs" style={{ background: 'var(--t-toolbar-bg)', color: 'var(--t-text)' }}>{'\\_ \\{ \\} \\% \\&'}</code></p>
+                </div>
+              </div>
+
+              <div>
+                <p className="font-medium" style={{ color: 'var(--t-text)' }}>Nên tránh</p>
+                <div className="mt-1 space-y-1">
+                  <p>Multi-line blocks with <code className="px-1.5 py-0.5 rounded text-xs" style={{ background: 'var(--t-toolbar-bg)', color: 'var(--t-text)' }}>{'\\'}</code> inside <code className="px-1.5 py-0.5 rounded text-xs" style={{ background: 'var(--t-toolbar-bg)', color: 'var(--t-text)' }}>cases</code>, <code className="px-1.5 py-0.5 rounded text-xs" style={{ background: 'var(--t-toolbar-bg)', color: 'var(--t-text)' }}>aligned</code>, <code className="px-1.5 py-0.5 rounded text-xs" style={{ background: 'var(--t-toolbar-bg)', color: 'var(--t-text)' }}>array</code>, <code className="px-1.5 py-0.5 rounded text-xs" style={{ background: 'var(--t-toolbar-bg)', color: 'var(--t-text)' }}>matrix</code></p>
+                  <p>Mixing math with plain HTML line breaks or splitting one formula into many editor blocks</p>
+                  <p>Putting raw <code className="px-1.5 py-0.5 rounded text-xs" style={{ background: 'var(--t-toolbar-bg)', color: 'var(--t-text)' }}>{'\( \) / \\[ \\]'}</code> in the middle of normal text unless the whole expression stays together</p>
+                </div>
+              </div>
             </div>
           </section>
 

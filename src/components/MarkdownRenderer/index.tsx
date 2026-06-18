@@ -96,8 +96,8 @@ function splitMathSegments(text: string): Array<{ type: 'text'; value: string } 
   const findNextDelimiter = (input: string, fromIndex: number) => {
     const candidates = [
       { token: '$$', type: 'display' as const, index: input.indexOf('$$', fromIndex), priority: 0 },
-      { token: '\[', type: 'display' as const, index: input.indexOf('\[', fromIndex), priority: 1 },
-      { token: '\(', type: 'inline' as const, index: input.indexOf('\(', fromIndex), priority: 2 },
+      { token: '\\[', type: 'display' as const, index: input.indexOf('\\[', fromIndex), priority: 1 },
+      { token: '\\(', type: 'inline' as const, index: input.indexOf('\\(', fromIndex), priority: 2 },
       { token: '$', type: 'inline' as const, index: input.indexOf('$', fromIndex), priority: 3 },
     ].filter(item => item.index !== -1)
 
@@ -115,7 +115,6 @@ function splitMathSegments(text: string): Array<{ type: 'text'; value: string } 
     }
 
     const start = next.index
-    const displayMode = next.type === 'display'
 
     if (start > i) {
       segments.push({ type: 'text', value: text.slice(i, start) })
@@ -146,6 +145,12 @@ function splitMathSegments(text: string): Array<{ type: 'text'; value: string } 
     }
 
     if (next.token === '$') {
+      if (start > 0 && text[start - 1] === '\\') {
+        segments.push({ type: 'text', value: text.slice(i, start + 1) })
+        i = start + 1
+        continue
+      }
+
       const end = text.indexOf('$', start + 1)
       if (end === -1) {
         segments.push({ type: 'text', value: text.slice(start) })
@@ -157,7 +162,6 @@ function splitMathSegments(text: string): Array<{ type: 'text'; value: string } 
       continue
     }
 
-    // \(
     const end = text.indexOf('\\)', start + 2)
     if (end === -1) {
       segments.push({ type: 'text', value: text.slice(start) })
