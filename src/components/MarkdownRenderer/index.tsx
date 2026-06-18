@@ -4,7 +4,8 @@ import remarkMath from 'remark-math'
 import rehypeKatex from 'rehype-katex'
 import rehypeHighlight from 'rehype-highlight'
 import rehypeRaw from 'rehype-raw'
-import { useState } from 'react'
+import { useMemo } from 'react'
+import { renderToString } from 'katex'
 
 interface MarkdownRendererProps {
   content: string
@@ -22,7 +23,147 @@ function toEmbedUrl(url: string): string | null {
     const dmMatch = url.match(/dailymotion\.com\/video\/([a-z0-9]+)/i)
     if (dmMatch) return `https://www.dailymotion.com/embed/video/${dmMatch[1]}`
     return null
-  } catch { return null }
+  } catch {
+    return null
+  }
+}
+
+function isMathTextCandidate(text: string): boolean {
+  return text.includes('$')
+}
+
+function normalizeLatexExpr(expr: string): string {
+  const trimmed = expr.trim()
+  // Accept a common typo where the leading backslash is typed as a slash.
+  // Example: /omega -> \omega, /frac{1}{2} -> \frac{1}{2}
+  // Leave normal division untouched: 1/2 stays as-is.
+  return trimmed.replace(/^\/([A-Za-z]+)(?=\b|\{|\(|\[|$)/, '\\$1')
+}
+
+function renderMath(expr: string, displayMode: boolean): string {
+  const normalized = normalizeLatexExpr(expr)
+  try {
+    return renderToString(normalized, {
+      displayMode,
+      throwOnError: false,
+      strict: 'ignore',
+      trust: false,
+    })
+  } catch {
+    return displayMode ? `<span class="math-error">$$${normalized}$$</span>` : `<span class="math-error">$${normalized}$</span>`
+  }
+}
+
+function splitMathSegments(text: string): Array<{ type: 'text'; value: string } | { type: 'math'; value: string; displayMode: boolean }> {
+  const segments: Array<{ type: 'text'; value: string } | { type: 'math'; value: string; displayMode: boolean }> = []
+  if (!isMathTextCandidate(text)) {
+    return [{ type: 'text', value: text }]
+  }
+
+  let i = 0
+  while (i < text.length) {
+    const nextDisplay = text.indexOf('$$', i)
+    const nextInline = text.indexOf('$', i)
+
+    let start = -1
+    let displayMode = false
+
+    if (nextDisplay !== -1 && (nextInline === -1 || nextDisplay <= nextInline)) {
+      start = nextDisplay
+      displayMode = true
+    } else if (nextInline !== -1) {
+      start = nextInline
+    }
+
+    if (start === -1) {
+      segments.push({ type: 'text', value: text.slice(i) })
+      break
+    }
+
+    if (start > i) {
+      segments.push({ type: 'text', value: text.slice(i, start) })
+    }
+
+    if (displayMode) {
+      const end = text.indexOf('$$', start + 2)
+      if (end === -1) {
+        segments.push({ type: 'text', value: text.slice(start) })
+        break
+      }
+      const expr = text.slice(start + 2, end).trim()
+      if (!expr) {
+        segments.push({ type: 'text', value: '$$' })
+      } else {
+        segments.push({ type: 'math', value: expr, displayMode: true })
+      }
+      i = end + 2
+      continue
+    }
+
+    const end = text.indexOf('$', start + 1)
+    if (end === -1) {
+      segments.push({ type: 'text', value: text.slice(start) })
+      break
+    }
+    const expr = text.slice(start + 1, end).trim()
+    if (!expr) {
+      segments.push({ type: 'text', value: '$' })
+    } else {
+      segments.push({ type: 'math', value: expr, displayMode: false })
+    }
+    i = end + 1
+  }
+
+  return segments.length > 0 ? segments : [{ type: 'text', value: text }]
+}
+
+function isExcludedAncestor(node: Node | null): boolean {
+  let current = node?.parentElement ?? null
+  while (current) {
+    const tag = current.tagName.toLowerCase()
+    if (tag === 'code' || tag === 'pre' || tag === 'script' || tag === 'style' || tag === 'textarea') {
+      return true
+    }
+    current = current.parentElement
+  }
+  return false
+}
+
+function renderMathInHtml(html: string): string {
+  if (!isMathTextCandidate(html)) return html
+
+  const parser = new DOMParser()
+  const doc = parser.parseFromString(html, 'text/html')
+  const walker = doc.createTreeWalker(doc.body, NodeFilter.SHOW_TEXT)
+
+  const textNodes: Text[] = []
+  while (walker.nextNode()) {
+    textNodes.push(walker.currentNode as Text)
+  }
+
+  for (const node of textNodes) {
+    if (isExcludedAncestor(node)) continue
+    const text = node.textContent ?? ''
+    if (!isMathTextCandidate(text)) continue
+
+    const segments = splitMathSegments(text)
+    if (segments.length === 1 && segments[0].type === 'text') continue
+
+    const fragment = doc.createDocumentFragment()
+    for (const segment of segments) {
+      if (segment.type === 'text') {
+        fragment.appendChild(doc.createTextNode(segment.value))
+      } else {
+        const span = doc.createElement('span')
+        span.innerHTML = renderMath(segment.value, segment.displayMode)
+        fragment.appendChild(span)
+      }
+    }
+
+    node.parentNode?.replaceChild(fragment, node)
+  }
+
+  return doc.body.innerHTML
 }
 
 // ── Parse custom media divs out of HTML ───────────────────────────────────
@@ -124,14 +265,15 @@ function FileView({ src, label, mimetype, filesize }: { src: string; label: stri
   )
 }
 
-// ── HTML renderer that replaces media divs with React components ───────────
+// ── HTML renderer that replaces media nodes with React components ───────────
 
 function HtmlRenderer({ html }: { html: string }) {
+  const processedHtml = useMemo(() => renderMathInHtml(html), [html])
+
   // Split HTML on media block divs and render them as React
   // We use a DOM parser to walk through the nodes
-  const parts: React.ReactNode[] = []
   const parser = new DOMParser()
-  const doc = parser.parseFromString(html, 'text/html')
+  const doc = parser.parseFromString(processedHtml, 'text/html')
   const body = doc.body
 
   let key = 0
@@ -156,7 +298,6 @@ function HtmlRenderer({ html }: { html: string }) {
     }
 
     // Recurse into children — serialize non-media nodes back to HTML for dangerouslySetInnerHTML
-    // For simplicity, collect runs of "normal" HTML and media nodes, then render
     const childParts: React.ReactNode[] = []
     let htmlBuffer = ''
 
@@ -196,7 +337,7 @@ function HtmlRenderer({ html }: { html: string }) {
   const hasMedia = body.querySelector('[data-type="audio-block"],[data-type="video-block"],[data-type="file-block"]')
 
   if (!hasMedia) {
-    return <div className="markdown-body" dangerouslySetInnerHTML={{ __html: html }} />
+    return <div className="markdown-body" dangerouslySetInnerHTML={{ __html: processedHtml }} />
   }
 
   const result = walk(body)

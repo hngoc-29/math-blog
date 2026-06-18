@@ -1,5 +1,5 @@
 import { useEditor, EditorContent } from '@tiptap/react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Document from '@tiptap/extension-document'
 import Paragraph from '@tiptap/extension-paragraph'
 import Text from '@tiptap/extension-text'
@@ -75,6 +75,17 @@ export function RichEditor({ content, onChange }: RichEditorProps) {
       onChange(editor.getHTML())
     },
   })
+  useEffect(() => {
+    if (!editor) return
+    const nextContent = content || ''
+    const currentContent = editor.getHTML()
+
+    if (currentContent !== nextContent) {
+      editor.commands.setContent(nextContent, false)
+    }
+  }, [content, editor])
+
+
 
   return (
     <>

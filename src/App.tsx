@@ -9,8 +9,17 @@ function AppInner() {
   const [payload, setPayload] = useState<Payload | null | undefined>(undefined)
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search)
-    if (!params.get('data')) { setPayload(null); return }
+    const hasPayload = Boolean(
+      window.location.hash && window.location.hash !== '#' ||
+      new URLSearchParams(window.location.search).get('h') ||
+      new URLSearchParams(window.location.search).get('data') ||
+      new URLSearchParams(window.location.search).get('s')
+    )
+
+    if (!hasPayload) {
+      setPayload(null)
+      return
+    }
     readPayloadFromURL().then(setPayload)
   }, [])
 

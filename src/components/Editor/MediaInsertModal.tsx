@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback } from 'react'
 import type { Editor } from '@tiptap/react'
+import { fileToDataUrl } from '../../utils/media'
 
 interface MediaInsertModalProps {
   editor: Editor
@@ -153,12 +154,7 @@ function UploadTab({ onInsert }: { onInsert: (kind: MediaKind, src: string, labe
       setError(`File exceeds ${MAX_FILE_MB} MB. Use a URL link for large media.`)
       return
     }
-    const dataUrl = await new Promise<string>((res, rej) => {
-      const r = new FileReader()
-      r.onload = () => res(r.result as string)
-      r.onerror = rej
-      r.readAsDataURL(file)
-    })
+    const dataUrl = await fileToDataUrl(file)
     const kind = guessKindFromMime(file.type)
     onInsert(kind, dataUrl, file.name, { mimeType: file.type, fileSize: file.size })
   }, [onInsert])

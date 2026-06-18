@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, type ReactNode } from 'react'
+import { createContext, useContext, useState, useEffect, useCallback, useMemo, type ReactNode } from 'react'
 
 export type Theme = 'parchment' | 'dark' | 'sepia' | 'neon' | 'slate'
 
@@ -139,10 +139,10 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   const config = THEMES[theme]
 
-  const setTheme = (t: Theme) => {
+  const setTheme = useCallback((t: Theme) => {
     setThemeState(t)
     localStorage.setItem('sl-theme', t)
-  }
+  }, [])
 
   // Apply CSS variables to :root
   useEffect(() => {
@@ -165,8 +165,10 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     document.body.style.color = config.text
   }, [config])
 
+  const contextValue = useMemo(() => ({ theme, config, setTheme }), [theme, config, setTheme])
+
   return (
-    <ThemeContext.Provider value={{ theme, config, setTheme }}>
+    <ThemeContext.Provider value={contextValue}>
       {children}
     </ThemeContext.Provider>
   )

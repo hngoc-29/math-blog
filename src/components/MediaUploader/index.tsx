@@ -1,5 +1,6 @@
 import { useCallback, useRef, useState } from 'react'
 import type { MediaAttachment, MediaType } from '../../utils/encode'
+import { fileToDataUrl } from '../../utils/media'
 
 interface MediaUploaderProps {
   media: MediaAttachment[]
@@ -191,12 +192,7 @@ function UploadTab({ media, onChange }: MediaUploaderProps) {
         newErrors.push(`"${file.name}" exceeds ${MAX_FILE_MB} MB — use a URL link instead.`)
         continue
       }
-      const dataUrl = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader()
-        reader.onload = () => resolve(reader.result as string)
-        reader.onerror = reject
-        reader.readAsDataURL(file)
-      })
+      const dataUrl = await fileToDataUrl(file)
       newMedia.push({
         id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
         type: getMediaType(file.type),

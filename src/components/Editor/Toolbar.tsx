@@ -32,7 +32,7 @@ export function Toolbar({ editor, onInsertMedia }: ToolbarProps) {
   }, [editor, imageUrl])
 
   const insertMath = useCallback(() => {
-    editor.chain().focus().insertContent(' $$ \\LaTeX $$ ').run()
+    editor.chain().focus().insertContent(' $x^2$ ').run()
   }, [editor])
 
   return (

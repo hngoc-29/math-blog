@@ -4,6 +4,8 @@ import { useTheme } from '../../context/ThemeContext'
 
 interface QRCodeCardProps { url: string }
 
+const MAX_QR_URL_LENGTH = 1200
+
 export function QRCodeCard({ url }: QRCodeCardProps) {
   const { config } = useTheme()
   const [copied, setCopied] = useState(false)
@@ -20,6 +22,7 @@ export function QRCodeCard({ url }: QRCodeCardProps) {
   }
 
   const displayUrl = url.length > 80 ? url.slice(0, 80) + '…' : url
+  const tooLongForQr = url.length > MAX_QR_URL_LENGTH
 
   return (
     <div className="fade-up fade-up-4 mt-6 rounded-2xl p-6 shadow-xl border"
@@ -27,7 +30,13 @@ export function QRCodeCard({ url }: QRCodeCardProps) {
       <div className="flex flex-col md:flex-row gap-6 items-start md:items-center">
         {/* QR */}
         <div className="shrink-0 p-3 bg-white rounded-xl shadow-inner">
-          <QRCodeSVG value={url} size={140} bgColor="#ffffff" fgColor="#1a1a2e" level="M" />
+          {tooLongForQr ? (
+            <div className="w-[140px] h-[140px] rounded-lg flex items-center justify-center text-center p-3" style={{ background: '#f8fafc', color: '#334155' }}>
+              <p className="text-xs leading-5">Link quá dài cho QR. Dùng Copy URL để chia sẻ.</p>
+            </div>
+          ) : (
+            <QRCodeSVG value={url} size={140} bgColor="#ffffff" fgColor="#1a1a2e" level="L" includeMargin />
+          )}
         </div>
 
         {/* URL + Actions */}
@@ -60,6 +69,11 @@ export function QRCodeCard({ url }: QRCodeCardProps) {
           <p className="mt-3 text-xs font-ui" style={{ color: 'rgba(255,255,255,0.35)' }}>
             Scan QR code or share the link. No server — all data lives in the URL.
           </p>
+          {tooLongForQr && (
+            <p className="mt-2 text-xs font-ui" style={{ color: '#f59e0b' }}>
+              QR is disabled because the link is too long. The URL still works when copied.
+            </p>
+          )}
         </div>
       </div>
     </div>
