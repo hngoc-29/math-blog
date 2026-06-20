@@ -5,7 +5,7 @@ import rehypeKatex from 'rehype-katex'
 import rehypeHighlight from 'rehype-highlight'
 import rehypeRaw from 'rehype-raw'
 import { useMemo } from 'react'
-import { renderToString } from 'katex'
+import { renderMathToHtml } from '../../utils/math'
 
 interface MarkdownRendererProps {
   content: string
@@ -32,27 +32,8 @@ function isMathTextCandidate(text: string): boolean {
   return text.includes('$') || text.includes('\\(') || text.includes('\\[')
 }
 
-function normalizeLatexExpr(expr: string): string {
-  const trimmed = expr.trim()
-  // Accept a common typo where the leading backslash is typed as a slash.
-  // Example: /omega -> \omega, /frac{1}{2} -> \frac{1}{2}
-  // Leave normal division untouched: 1/2 stays as-is.
-  return trimmed.replace(/^\/([A-Za-z]+)(?=\b|\{|\(|\[|$)/, '\\$1')
-}
-
 function renderMath(expr: string, displayMode: boolean): string {
-  const normalized = normalizeLatexExpr(expr)
-  try {
-    return renderToString(normalized, {
-      displayMode,
-      throwOnError: false,
-      strict: 'ignore',
-      trust: false,
-    })
-  } catch {
-    const open = displayMode ? '$$' : '$'
-    return `<span class="math-error">${open}${normalized}${open}</span>`
-  }
+  return renderMathToHtml(expr, displayMode)
 }
 
 function normalizeHtmlMathBody(body: string): string {

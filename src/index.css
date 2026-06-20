@@ -36,23 +36,25 @@ body {
 }
 
 .tiptap-editor {
-  min-height: 280px; padding: 1.25rem 1.5rem; outline: none;
-  font-family: 'Lora', Georgia, serif; font-size: 1rem; line-height: 1.75;
+  min-height: 220px; max-height: min(60vh, 480px); overflow-y: auto; -webkit-overflow-scrolling: touch;
+  padding: 1.25rem 1.5rem; outline: none;
+  font-family: 'Lora', Georgia, serif; font-size: 1rem; line-height: 1.5;
   color: var(--t-text); background: var(--t-editor-bg);
   transition: background 0.25s, color 0.25s;
 }
-.tiptap-editor p { margin-bottom: 0.75em; }
+.tiptap-editor p { margin-bottom: 0.55em; }
 .tiptap-editor p.is-editor-empty:first-child::before {
   color: var(--t-text-muted); content: attr(data-placeholder);
   float: left; height: 0; pointer-events: none; opacity: 0.55;
 }
-.tiptap-editor h1 { font-family: 'Playfair Display', Georgia, serif; font-size: 1.875rem; font-weight: 700; margin: 1em 0 0.5em; color: var(--t-text); }
-.tiptap-editor h2 { font-family: 'Playfair Display', Georgia, serif; font-size: 1.5rem; font-weight: 600; margin: 1em 0 0.5em; color: var(--t-text); }
-.tiptap-editor h3 { font-family: 'Playfair Display', Georgia, serif; font-size: 1.25rem; font-weight: 600; margin: 1em 0 0.5em; color: var(--t-text); }
-.tiptap-editor ul { list-style-type: disc; padding-left: 1.5em; margin-bottom: 0.75em; }
-.tiptap-editor ol { list-style-type: decimal; padding-left: 1.5em; margin-bottom: 0.75em; }
-.tiptap-editor li { margin-bottom: 0.25em; }
-.tiptap-editor blockquote { border-left: 3px solid var(--t-accent); margin: 1em 0; padding-left: 1em; font-style: italic; color: var(--t-text-muted); }
+.tiptap-editor h1 { font-family: 'Playfair Display', Georgia, serif; font-size: 1.875rem; font-weight: 700; margin: 0.85em 0 0.4em; color: var(--t-text); }
+.tiptap-editor h2 { font-family: 'Playfair Display', Georgia, serif; font-size: 1.5rem; font-weight: 600; margin: 0.85em 0 0.4em; color: var(--t-text); }
+.tiptap-editor h3 { font-family: 'Playfair Display', Georgia, serif; font-size: 1.25rem; font-weight: 600; margin: 0.85em 0 0.4em; color: var(--t-text); }
+.tiptap-editor ul { list-style-type: disc; padding-left: 1.5em; margin-bottom: 0.55em; }
+.tiptap-editor ol { list-style-type: decimal; padding-left: 1.5em; margin-bottom: 0.55em; }
+.tiptap-editor li { margin-bottom: 0.2em; }
+.tiptap-editor li p { margin-bottom: 0.2em; }
+.tiptap-editor blockquote { border-left: 3px solid var(--t-accent); margin: 0.85em 0; padding-left: 1em; font-style: italic; color: var(--t-text-muted); }
 .tiptap-editor code { background: var(--t-toolbar-bg); border-radius: 4px; padding: 0.15em 0.35em; font-family: 'JetBrains Mono', monospace; font-size: 0.875em; color: var(--t-text); }
 .tiptap-editor pre { background: var(--t-code-bg); border-radius: 8px; padding: 1em 1.25em; overflow-x: auto; margin: 1em 0; }
 .tiptap-editor pre code { background: transparent; color: var(--t-code-text); font-size: 0.875rem; padding: 0; }
@@ -96,7 +98,7 @@ body {
 
 .toolbar-btn {
   display: flex; align-items: center; justify-content: center;
-  width: 2rem; height: 2rem; border-radius: 5px; border: none;
+  width: 2.25rem; height: 2.25rem; border-radius: 6px; border: none;
   background: transparent; color: var(--t-text-muted);
   cursor: pointer; font-size: 0.875rem; font-weight: 500;
   transition: background 0.12s, color 0.12s; font-family: 'DM Sans', sans-serif;
@@ -136,3 +138,73 @@ video { accent-color: var(--t-accent); }
 /* Drag handle cursor */
 [data-drag-handle] { cursor: grab; }
 [data-drag-handle]:active { cursor: grabbing; }
+
+/* ── Live LaTeX nodes in the editor ──────────────────────────────────────── */
+
+.math-chip-wrapper { position: relative; display: inline-block; vertical-align: baseline; line-height: 1; }
+.math-inline-chip {
+  display: inline-block; cursor: pointer; vertical-align: baseline;
+  padding: 0.05em 0.32em; margin: 0 0.05em; border-radius: 5px;
+  background: color-mix(in srgb, var(--t-accent) 14%, transparent);
+  border: 1px solid transparent;
+  transition: background 0.12s, border-color 0.12s;
+}
+.math-inline-chip:hover { background: color-mix(in srgb, var(--t-accent) 26%, transparent); border-color: var(--t-accent); }
+.math-inline-chip.has-error { background: rgba(239,68,68,0.12); border-color: rgba(239,68,68,0.4); }
+.math-inline-chip.is-placeholder { opacity: 0.4; cursor: default; }
+.math-inline-chip .katex { font-size: 1em; }
+
+.math-edit-panel {
+  position: absolute; z-index: 30; top: calc(100% + 6px); left: 0;
+  width: max-content; min-width: 240px; max-width: min(92vw, 360px);
+  background: var(--t-surface); border: 1px solid var(--t-accent);
+  border-radius: 12px; box-shadow: 0 12px 32px rgba(0,0,0,0.2);
+  padding: 0.65rem; display: flex; flex-direction: column; gap: 0.5rem;
+  font-family: 'DM Sans', sans-serif;
+}
+.math-edit-preview {
+  min-height: 1.9em; padding: 0.4em 0.55em; border-radius: 8px;
+  background: var(--t-toolbar-bg); overflow-x: auto; font-size: 1.05rem;
+  display: flex; align-items: center;
+}
+.math-edit-input, .math-block-textarea {
+  width: 100%; font-family: 'JetBrains Mono', monospace; font-size: 0.875rem;
+  padding: 0.45em 0.6em; border-radius: 8px; border: 1px solid var(--t-border);
+  background: var(--t-input-bg); color: var(--t-text); outline: none;
+}
+.math-edit-input:focus, .math-block-textarea:focus { border-color: var(--t-accent); }
+.math-block-textarea { min-height: 4.5rem; resize: vertical; }
+
+.math-edit-symbols { display: flex; flex-wrap: wrap; gap: 0.25rem; }
+.math-symbol-btn {
+  min-width: 1.95rem; height: 1.95rem; padding: 0 0.35rem;
+  border-radius: 6px; border: 1px solid var(--t-border);
+  background: var(--t-toolbar-bg); color: var(--t-text);
+  font-size: 0.85rem; cursor: pointer; font-family: 'Lora', Georgia, serif;
+}
+.math-symbol-btn:hover { background: var(--t-accent); color: var(--t-accent-text); border-color: var(--t-accent); }
+
+.math-edit-actions { display: flex; align-items: center; gap: 0.5rem; }
+.math-edit-delete, .math-edit-done {
+  font-family: 'DM Sans', sans-serif; font-size: 0.8rem; font-weight: 600;
+  padding: 0.4em 0.8em; border-radius: 8px; cursor: pointer; border: 1px solid transparent;
+}
+.math-edit-delete { background: transparent; color: #dc2626; border-color: rgba(220,38,38,0.3); }
+.math-edit-delete:hover { background: rgba(220,38,38,0.08); }
+.math-edit-done { background: var(--t-accent); color: var(--t-accent-text); margin-left: auto; }
+.math-edit-hint { font-size: 0.7rem; color: var(--t-text-muted); flex: 1; text-align: center; }
+
+/* Block / display math */
+.math-block-card { margin: 0.7em 0; border-radius: 12px; border: 1px solid var(--t-border); background: var(--t-surface); transition: border-color 0.12s; }
+.math-block-card.has-error { border-color: rgba(239,68,68,0.4); }
+.math-block-card.is-editing { border-color: var(--t-accent); }
+.math-block-preview { padding: 1em 1.1em; overflow-x: auto; cursor: pointer; min-height: 2.4em; display: flex; align-items: center; justify-content: center; }
+.math-block-edit { padding: 0.75rem; display: flex; flex-direction: column; gap: 0.55rem; }
+
+@media (max-width: 640px) {
+  .math-edit-panel {
+    position: fixed; left: 0.5rem; right: 0.5rem; bottom: 0.5rem; top: auto;
+    width: auto; max-width: none; max-height: 70vh; overflow-y: auto;
+  }
+  .toolbar-btn { width: 2.4rem; height: 2.4rem; }
+}

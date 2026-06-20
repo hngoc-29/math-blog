@@ -34,6 +34,8 @@ import TableHeader from '@tiptap/extension-table-header'
 import { Toolbar } from './Toolbar'
 import { MediaInsertModal } from './MediaInsertModal'
 import { AudioBlock, VideoBlock, FileBlock } from './MediaNodes'
+import { InlineMath, BlockMath } from './MathNodes'
+import { Indent } from './IndentExtension'
 
 interface RichEditorProps {
   content: string
@@ -55,6 +57,7 @@ export function RichEditor({ content, onChange }: RichEditorProps) {
       History, Dropcursor, Gapcursor, Typography,
       Subscript, Superscript,
       TextAlign.configure({ types: ['heading', 'paragraph'] }),
+      Indent,
       Link.configure({ openOnClick: false }),
       Image.configure({ HTMLAttributes: { class: 'editor-img' } }),
       Table.configure({ resizable: false }),
@@ -63,6 +66,9 @@ export function RichEditor({ content, onChange }: RichEditorProps) {
       AudioBlock,
       VideoBlock,
       FileBlock,
+      // Live-rendered LaTeX
+      InlineMath,
+      BlockMath,
     ],
     content: content || '',
     editorProps: {

@@ -31,8 +31,12 @@ export function Toolbar({ editor, onInsertMedia }: ToolbarProps) {
     setShowImageInput(false); setImageUrl('')
   }, [editor, imageUrl])
 
-  const insertMath = useCallback(() => {
-    editor.chain().focus().insertContent(' $x^2$ ').run()
+  const insertInlineMath = useCallback(() => {
+    editor.chain().focus().insertContent({ type: 'mathInline', attrs: { latex: '' } }).run()
+  }, [editor])
+
+  const insertBlockMath = useCallback(() => {
+    editor.chain().focus().insertContent({ type: 'mathBlock', attrs: { latex: '' } }).run()
   }, [editor])
 
   return (
@@ -76,8 +80,11 @@ export function Toolbar({ editor, onInsertMedia }: ToolbarProps) {
         <Btn onClick={() => setShowImageInput(v => !v)} title="Inline image URL">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
         </Btn>
-        <Btn onClick={insertMath} title="Insert LaTeX math">
+        <Btn onClick={insertInlineMath} title="Chèn công thức (inline math)">
           <span style={{ fontFamily: 'serif', fontStyle: 'italic' }}>∑</span>
+        </Btn>
+        <Btn onClick={insertBlockMath} title="Chèn công thức khối (display math)">
+          <span style={{ fontFamily: 'serif', fontStyle: 'italic' }}>∫</span>
         </Btn>
         <Sep />
 
