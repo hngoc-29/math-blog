@@ -1,8 +1,27 @@
 import { Node, InputRule, mergeAttributes, nodePasteRule } from '@tiptap/core'
 import { ReactNodeViewRenderer, NodeViewWrapper } from '@tiptap/react'
 import type { NodeViewProps } from '@tiptap/react'
+import type { Transaction } from '@tiptap/pm/state'
+import type { Node as PMNode } from '@tiptap/pm/model'
 import { useEffect, useRef, useState } from 'react'
 import { renderMathToHtml, isMathRenderError } from '../../utils/math'
+
+/**
+ * Inserts a block-level node at [from, to). If that range happens to be the
+ * *entire* content of its parent text block (the common case: pressing Enter
+ * for a new line, then typing "$$...$$" as the whole line), replaces the
+ * parent block itself instead — otherwise ProseMirror's replace would leave
+ * an empty paragraph sitting above the new block node.
+ */
+function insertBlockNode(tr: Transaction, doc: PMNode, from: number, to: number, node: PMNode) {
+  const $from = doc.resolve(from)
+  const depth = $from.depth
+  if (depth > 0 && from === $from.start(depth) && to === $from.end(depth)) {
+    tr.replaceWith($from.before(depth), $from.after(depth), node)
+  } else {
+    tr.replaceWith(from, to, node)
+  }
+}
 
 // ── Quick-insert LaTeX snippets, so people don't need to memorize syntax ────
 
@@ -192,6 +211,16 @@ export const InlineMath = Node.create({
           tr.replaceWith(range.from, range.to, this.type.create({ latex }))
         },
       }),
+      new InputRule({
+        // The view page also accepts \( ... \) for inline math — mirror that here.
+        find: /\\\(([^]*?)\\\)$/,
+        handler: ({ state, range, match }) => {
+          const latex = match[1]?.trim()
+          if (!latex) return
+          const { tr } = state
+          tr.replaceWith(range.from, range.to, this.type.create({ latex }))
+        },
+      }),
     ]
   },
 
@@ -199,6 +228,11 @@ export const InlineMath = Node.create({
     return [
       nodePasteRule({
         find: /(?<!\$)\$([^\s$](?:[^$\n]*[^\s$])?)\$(?!\$)/g,
+        type: this.type,
+        getAttributes: match => ({ latex: match[1]?.trim() ?? '' }),
+      }),
+      nodePasteRule({
+        find: /\\\(([^]*?)\\\)/g,
         type: this.type,
         getAttributes: match => ({ latex: match[1]?.trim() ?? '' }),
       }),
@@ -338,7 +372,17 @@ export const BlockMath = Node.create({
           const latex = match[1]?.trim()
           if (!latex) return
           const { tr } = state
-          tr.replaceWith(range.from, range.to, this.type.create({ latex }))
+          insertBlockNode(tr, state.doc, range.from, range.to, this.type.create({ latex }))
+        },
+      }),
+      new InputRule({
+        // The view page also accepts \[ ... \] for display math — mirror that here.
+        find: /\\\[([^]*?)\\\]$/,
+        handler: ({ state, range, match }) => {
+          const latex = match[1]?.trim()
+          if (!latex) return
+          const { tr } = state
+          insertBlockNode(tr, state.doc, range.from, range.to, this.type.create({ latex }))
         },
       }),
     ]
@@ -348,6 +392,11 @@ export const BlockMath = Node.create({
     return [
       nodePasteRule({
         find: /\$\$([^$\n]+)\$\$/g,
+        type: this.type,
+        getAttributes: match => ({ latex: match[1]?.trim() ?? '' }),
+      }),
+      nodePasteRule({
+        find: /\\\[([^]*?)\\\]/g,
         type: this.type,
         getAttributes: match => ({ latex: match[1]?.trim() ?? '' }),
       }),

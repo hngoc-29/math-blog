@@ -257,23 +257,27 @@ function HelpModal({ onClose }: { onClose: () => void }) {
           <section className="rounded-2xl border p-4" style={{ background: 'var(--t-surface)', borderColor: 'var(--t-border)' }}>
             <h3 className="font-ui font-semibold text-sm mb-2" style={{ color: 'var(--t-text)' }}>2) LaTeX / math</h3>
             <div className="space-y-3 font-ui text-sm leading-6" style={{ color: 'var(--t-text-muted)' }}>
+              <p>
+                Gõ xong công thức là nó <strong style={{ color: 'var(--t-text)' }}>render ngay tại chỗ</strong> (giống Word), không cần bấm Preview. Bấm vào công thức đã render để sửa lại — có xem trước trực tiếp và bảng ký hiệu nhanh (phân số, căn, tổng, Hy Lạp...) ngay trong khung sửa.
+              </p>
               <div>
                 <p className="font-medium" style={{ color: 'var(--t-text)' }}>Nên dùng</p>
                 <div className="mt-1 space-y-1">
-                  <p>Inline math: <code className="px-1.5 py-0.5 rounded text-xs" style={{ background: 'var(--t-toolbar-bg)', color: 'var(--t-text)' }}>{'$E=mc^2$'}</code></p>
-                  <p>Display math: <code className="px-1.5 py-0.5 rounded text-xs" style={{ background: 'var(--t-toolbar-bg)', color: 'var(--t-text)' }}>{'$$\\frac{1}{2}$$'}</code></p>
+                  <p>Inline math (gõ trực tiếp): <code className="px-1.5 py-0.5 rounded text-xs" style={{ background: 'var(--t-toolbar-bg)', color: 'var(--t-text)' }}>{'$E=mc^2$'}</code> hoặc nút <strong style={{ color: 'var(--t-text)' }}>∑</strong> trên toolbar</p>
+                  <p>Display math (công thức khối): <code className="px-1.5 py-0.5 rounded text-xs" style={{ background: 'var(--t-toolbar-bg)', color: 'var(--t-text)' }}>{'$$\\frac{1}{2}$$'}</code> hoặc nút <strong style={{ color: 'var(--t-text)' }}>∫</strong> trên toolbar</p>
+                  <p>Dạng <code className="px-1.5 py-0.5 rounded text-xs" style={{ background: 'var(--t-toolbar-bg)', color: 'var(--t-text)' }}>{'\\(...\\)'}</code> và <code className="px-1.5 py-0.5 rounded text-xs" style={{ background: 'var(--t-toolbar-bg)', color: 'var(--t-text)' }}>{'\\[...\\]'}</code> cũng được, tương đương <code className="px-1.5 py-0.5 rounded text-xs" style={{ background: 'var(--t-toolbar-bg)', color: 'var(--t-text)' }}>{'$...$'}</code> / <code className="px-1.5 py-0.5 rounded text-xs" style={{ background: 'var(--t-toolbar-bg)', color: 'var(--t-text)' }}>{'$$...$$'}</code></p>
                   <p>Simple symbols: <code className="px-1.5 py-0.5 rounded text-xs" style={{ background: 'var(--t-toolbar-bg)', color: 'var(--t-text)' }}>{'\\alpha \\beta \\gamma \\omega \\pi'}</code></p>
                   <p>Common forms: <code className="px-1.5 py-0.5 rounded text-xs" style={{ background: 'var(--t-toolbar-bg)', color: 'var(--t-text)' }}>{'\\sqrt{x}'}</code>, <code className="px-1.5 py-0.5 rounded text-xs" style={{ background: 'var(--t-toolbar-bg)', color: 'var(--t-text)' }}>{'\\frac{a}{b}'}</code>, <code className="px-1.5 py-0.5 rounded text-xs" style={{ background: 'var(--t-toolbar-bg)', color: 'var(--t-text)' }}>{'\\sum_{i=1}^{n} i'}</code></p>
                   <p>Special characters in math: <code className="px-1.5 py-0.5 rounded text-xs" style={{ background: 'var(--t-toolbar-bg)', color: 'var(--t-text)' }}>{'\\_ \\{ \\} \\% \\&'}</code></p>
+                  <p>Môi trường nhiều dòng như <code className="px-1.5 py-0.5 rounded text-xs" style={{ background: 'var(--t-toolbar-bg)', color: 'var(--t-text)' }}>cases</code>, <code className="px-1.5 py-0.5 rounded text-xs" style={{ background: 'var(--t-toolbar-bg)', color: 'var(--t-text)' }}>aligned</code>, <code className="px-1.5 py-0.5 rounded text-xs" style={{ background: 'var(--t-toolbar-bg)', color: 'var(--t-text)' }}>matrix</code>: dùng nút <strong style={{ color: 'var(--t-text)' }}>∫</strong> để mở khung sửa nhiều dòng, gõ trực tiếp nhiều dòng trong đó (Ctrl/Cmd+Enter để xong)</p>
                 </div>
               </div>
 
               <div>
                 <p className="font-medium" style={{ color: 'var(--t-text)' }}>Nên tránh</p>
                 <div className="mt-1 space-y-1">
-                  <p>Multi-line blocks with <code className="px-1.5 py-0.5 rounded text-xs" style={{ background: 'var(--t-toolbar-bg)', color: 'var(--t-text)' }}>{'\\'}</code> inside <code className="px-1.5 py-0.5 rounded text-xs" style={{ background: 'var(--t-toolbar-bg)', color: 'var(--t-text)' }}>cases</code>, <code className="px-1.5 py-0.5 rounded text-xs" style={{ background: 'var(--t-toolbar-bg)', color: 'var(--t-text)' }}>aligned</code>, <code className="px-1.5 py-0.5 rounded text-xs" style={{ background: 'var(--t-toolbar-bg)', color: 'var(--t-text)' }}>array</code>, <code className="px-1.5 py-0.5 rounded text-xs" style={{ background: 'var(--t-toolbar-bg)', color: 'var(--t-text)' }}>matrix</code></p>
-                  <p>Mixing math with plain HTML line breaks or splitting one formula into many editor blocks</p>
-                  <p>Putting raw <code className="px-1.5 py-0.5 rounded text-xs" style={{ background: 'var(--t-toolbar-bg)', color: 'var(--t-text)' }}>{'\( \) / \\[ \\]'}</code> in the middle of normal text unless the whole expression stays together</p>
+                  <p>Gõ tự động (live) chỉ nhận diện khi cả công thức nằm trên một dòng — nếu cần xuống dòng thật bên trong công thức, dùng nút ∫ thay vì gõ trực tiếp trong đoạn văn</p>
+                  <p>Đặt dấu <code className="px-1.5 py-0.5 rounded text-xs" style={{ background: 'var(--t-toolbar-bg)', color: 'var(--t-text)' }}>$</code> sát số tiền/giá trị không phải công thức (vd <code className="px-1.5 py-0.5 rounded text-xs" style={{ background: 'var(--t-toolbar-bg)', color: 'var(--t-text)' }}>{'$5 và $10'}</code>) — hệ thống đã tránh phần lớn trường hợp này, nhưng nếu bị nhận nhầm, xóa công thức (nút Xóa khi đang sửa) rồi gõ lại bình thường</p>
                 </div>
               </div>
             </div>
@@ -497,8 +501,8 @@ export function CreatePage() {
             style={{ background: 'color-mix(in srgb, var(--t-surface) 60%, transparent)', borderColor: 'var(--t-border)' }}>
             <p className="font-ui text-xs leading-relaxed" style={{ color: 'var(--t-text-muted)' }}>
               <strong style={{ color: 'var(--t-text)' }}>💡 Tips:</strong>{' '}
-              Use <code className="px-1 py-0.5 rounded text-xs" style={{ background: 'var(--t-toolbar-bg)', color: 'var(--t-text)' }}>$E=mc^2$</code> for inline math,{' '}
-              <code className="px-1 py-0.5 rounded text-xs" style={{ background: 'var(--t-toolbar-bg)', color: 'var(--t-text)' }}>$$...$$</code> for display math.
+              Gõ <code className="px-1 py-0.5 rounded text-xs" style={{ background: 'var(--t-toolbar-bg)', color: 'var(--t-text)' }}>$E=mc^2$</code> hoặc{' '}
+              <code className="px-1 py-0.5 rounded text-xs" style={{ background: 'var(--t-toolbar-bg)', color: 'var(--t-text)' }}>$$...$$</code> là công thức render ngay, click vào để sửa lại.{' '}
               Drafts are auto-saved locally and restored when you come back.
             </p>
           </div>
